@@ -22,7 +22,7 @@ public class SpawnSmokeTests {
     public static void colonySpawnProtection(GameTestHelper helper) {
         var level = helper.getLevel();
         var manager = IColonyManager.getInstance();
-        var pos = helper.absolutePos(BlockPos.ZERO).offset(1024 * (manager.getTopColonyId() + 1), 0, 0);
+        var pos = helper.absolutePos(BlockPos.ZERO);
         helper.assertTrue(!manager.isCoordinateInAnyColony(level, pos), "Test must start outside a colony");
         Mob zombie = EntityType.ZOMBIE.create(level);
         zombie.moveTo(pos, 0, 0);
@@ -61,6 +61,7 @@ public class SpawnSmokeTests {
                 helper.getLevel().getCurrentDifficultyAt(mob.blockPosition()), reason, null, null, null);
     }
 }
+
 
 
 
