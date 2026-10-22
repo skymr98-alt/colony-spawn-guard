@@ -1,0 +1,34 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="GPL-3.0-only"
+issueTrackerURL="https://github.com/skymr98-alt/colony-spawn-guard/issues"
+
+[[mods]]
+modId="colony_spawn_guard"
+version="${file.jarVersion}"
+displayName="Colony Spawn Guard (Unofficial)"
+displayURL="https://github.com/skymr98-alt/colony-spawn-guard"
+displayTest="IGNORE_ALL_VERSION"
+authors="EverettSummer / Box.moe; mooviies; RomDmitriy; unofficial port maintained by skymr98-alt"
+description='''Unofficial ColonyWard fork for Minecraft 1.20.1 / Forge. Configurable spawn protection inside MineColonies colonies. Independent project, not endorsed by the original authors or the MineColonies team.'''
+
+[[dependencies.colony_spawn_guard]]
+modId="forge"
+mandatory=true
+versionRange="[47.2.0,48)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.colony_spawn_guard]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.20.1,1.20.2)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.colony_spawn_guard]]
+modId="minecolonies"
+mandatory=true
+versionRange="[1.20.1-1.1.1301]"
+ordering="AFTER"
+side="BOTH"

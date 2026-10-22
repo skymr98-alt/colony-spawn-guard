@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="320" viewBox="0 0 1280 320" role="img" aria-label="Colony Spawn Guard — Unofficial ColonyWard fork for Minecraft 1.20.1 and Forge">
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#122b35"/><stop offset="1" stop-color="#163e3b"/></linearGradient></defs>
+<rect width="1280" height="320" rx="20" fill="url(#bg)"/>
+<g fill="none" stroke="#4ad6a0" stroke-width="3" opacity=".15"><path d="M880 0v320M960 0v320M1040 0v320M1120 0v320M1200 0v320M800 80h480M800 160h480M800 240h480"/></g>
+<path d="M1085 65l85 30v72c0 44-35 72-85 100-50-28-85-56-85-100V95z" fill="#23594e" stroke="#75e6b3" stroke-width="4"/>
+<path d="M1037 165l31 30 63-70" fill="none" stroke="#adf5cb" stroke-width="12" stroke-linecap="square"/>
+<text x="65" y="75" fill="#87debc" font-family="Segoe UI,Arial,sans-serif" font-size="18" letter-spacing="3">UNOFFICIAL COLONYWARD FORK</text>
+<text x="62" y="151" fill="#effbf7" font-family="Segoe UI,Arial,sans-serif" font-size="62" font-weight="700">Colony Spawn Guard</text>
+<text x="65" y="199" fill="#bbd6d0" font-family="Segoe UI,Arial,sans-serif" font-size="24">Configurable spawn protection for your colonies.</text>
+<text x="65" y="263" fill="#87debc" font-family="Segoe UI,Arial,sans-serif" font-size="18">MINECRAFT 1.20.1  /  FORGE  /  GPLv3</text>
+</svg>

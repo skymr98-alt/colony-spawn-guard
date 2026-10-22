@@ -1,0 +1,107 @@
+plugins {
+    id 'java-library'
+    id 'net.minecraftforge.gradle' version '6.0.36'
+}
+version = '1.20.1-1.0.0'
+group = 'io.github.skymr98alt.colonyspawnguard'
+base { archivesName = 'colony-spawn-guard' }
+java { toolchain.languageVersion = JavaLanguageVersion.of(17) }
+minecraft {
+    mappings channel: 'official', version: '1.20.1'
+    runs {
+        server {
+            workingDirectory project.file('run')
+            args '--nogui'
+            mods { colony_spawn_guard { source sourceSets.main } }
+        }
+    }
+}
+repositories {
+    mavenCentral()
+}
+dependencies {
+    minecraft 'net.minecraftforge:forge:1.20.1-47.2.0'
+    if (project.hasProperty('minecolonies_jar')) {
+        compileOnly files(project.property('minecolonies_jar'))
+    } else {
+        compileOnly files(layout.buildDirectory.file('dependencies/minecolonies-1.20.1-1.1.1301.jar')).builtBy('downloadMineColonies')
+    }
+}
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+jar {
+    manifest { attributes 'Implementation-Version': project.version }
+    from('LICENSE')
+    from('NOTICE.md')
+    finalizedBy 'reobfJar'
+}
+tasks.register('sourcesZip', Zip) {
+    archiveFileName = "colony-spawn-guard-${project.version}-source.zip"
+    destinationDirectory = layout.buildDirectory.dir('distributions')
+    from(projectDir) {
+        exclude '.git/**', '.gradle/**', 'build/**', 'run/**', 'libs/**', 'local.properties'
+    }
+}
+
+
+// Pinned upstream binary is fetched only for compilation; never bundled or republished.
+tasks.register('downloadMineColonies') {
+    def output = layout.buildDirectory.file('dependencies/minecolonies-1.20.1-1.1.1301.jar')
+    outputs.file(output)
+    doLast {
+        def target = output.get().asFile
+        target.parentFile.mkdirs()
+        new URL('https://edge.forgecdn.net/files/9058/213/minecolonies-1.20.1-1.1.1301.jar').withInputStream { input ->
+            target.withOutputStream { out -> out << input }
+        }
+        def digest = java.security.MessageDigest.getInstance('SHA-256')
+        target.withInputStream { input ->
+            byte[] buffer = new byte[8192]
+            int count
+            while ((count = input.read(buffer)) != -1) { digest.update(buffer, 0, count) }
+        }
+        if (digest.digest().encodeHex().toString() != '8538f46fb32abd638767a021240e4c9a5a1413a820b01caec1113fea2eeb9196') {
+            target.delete()
+            throw new GradleException('MineColonies dependency checksum mismatch')
+        }
+    }
+}
+
+// Optional local integration smoke tests. Dependencies are supplied by the developer.
+if (project.hasProperty('integration_mods')) {
+    repositories { flatDir { dirs project.property('integration_mods') } }
+    dependencies {
+        implementation fg.deobf('local:minecolonies:1.20.1-1.1.1301')
+        implementation fg.deobf('local:structurize:1.20.1-1.0.818')
+        implementation fg.deobf('local:blockui:1.20.1-1.0.193')
+        implementation fg.deobf('local:domum_ornamentum:1.20.1-1.0.296:universal')
+    }
+    sourceSets { integration }
+    configurations.integrationImplementation.extendsFrom configurations.implementation
+    sourceSets.integration.compileClasspath += sourceSets.main.output
+    sourceSets.integration.runtimeClasspath += sourceSets.main.output
+    minecraft.runs {
+        gameTestServer {
+            workingDirectory project.file('run')
+            property 'forge.enabledGameTestNamespaces', 'colony_spawn_guard,forge'
+            mods {
+                colony_spawn_guard { source sourceSets.main }
+                colony_spawn_guard_tests { source sourceSets.integration }
+            }
+        }
+    }
+}
+
+
+tasks.withType(AbstractArchiveTask).configureEach {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}
+
+
+
+if (project.hasProperty('integration_mods')) {
+    tasks.matching { it.name == 'runGameTestServer' }.configureEach {
+        doFirst { copy { from 'gameteststructures'; into 'run/gameteststructures' } }
+    }
+}
+

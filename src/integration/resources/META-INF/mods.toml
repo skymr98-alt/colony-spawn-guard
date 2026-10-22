@@ -1,0 +1,7 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="GPL-3.0-only"
+[[mods]]
+modId="colony_spawn_guard_tests"
+version="1.0.0"
+displayName="Colony Spawn Guard integration tests"
