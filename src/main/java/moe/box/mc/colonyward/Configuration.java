@@ -3,11 +3,16 @@ package moe.box.mc.colonyward;
 import com.google.common.collect.Lists;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.monster.Enemy;
 import net.minecraftforge.common.ForgeConfigSpec;
 
 import java.util.List;
 
 public class Configuration {
+    private final ForgeConfigSpec.BooleanValue blockHostileMobs;
+    private final ForgeConfigSpec.ConfigValue<List<? extends String>> hostileExemptions;
     private final ForgeConfigSpec.ConfigValue<List<? extends String>> breeding;
     private final ForgeConfigSpec.ConfigValue<List<? extends String>> bucket;
     private final ForgeConfigSpec.ConfigValue<List<? extends String>> chunk_generation;
@@ -27,6 +32,11 @@ public class Configuration {
 
     public Configuration(ForgeConfigSpec.Builder builder) {
         builder.comment("Blacklist (All mobs or mods defined here will be prevented from spawning inside a colony)").push("general");
+
+        blockHostileMobs = builder.comment("Automatically block hostile mobs from any mod inside colonies. Uses MONSTER category or Enemy interface. Commands and spawn eggs are exempt from automatic blocking.")
+                .define("blockHostileMobs", true);
+        hostileExemptions = builder.comment("Entity IDs or mod IDs exempt from automatic hostile blocking. Explicit spawn-reason blacklists still apply.")
+                .defineList("hostileExemptions", Lists.newArrayList(), o -> o instanceof String);
 
         breeding = builder.comment("Mobs spawned from breeding")
                 .defineList("breeding", Lists.newArrayList(), o -> o instanceof String);
@@ -109,7 +119,16 @@ public class Configuration {
         triggered = builder.comment("Mobs spawned from a trigger (Like with the skeleton trap (skeleton horse))")
                 .defineList("triggered", Lists.newArrayList("minecraft:skeleton_horse"), o -> o instanceof String);
 
-builder.pop();
+        builder.pop();
+    }
+
+    public boolean shouldBlock(Mob mob, MobSpawnType reason) {
+        ResourceLocation id = net.minecraft.world.entity.EntityType.getKey(mob.getType());
+        if (reason != null && isEntityInBlackList(id, reason)) return true;
+        if (!blockHostileMobs.get() || reason == MobSpawnType.COMMAND || reason == MobSpawnType.SPAWN_EGG) return false;
+        var exemptions = hostileExemptions.get();
+        if (exemptions.contains(id.toString()) || exemptions.contains(id.getNamespace())) return false;
+        return mob.getType().getCategory() == MobCategory.MONSTER || mob instanceof Enemy;
     }
 
     public boolean isEntityInBlackList(ResourceLocation entityResource, MobSpawnType spawnReason) {
@@ -140,4 +159,5 @@ builder.pop();
         };
     }
 }
+
 

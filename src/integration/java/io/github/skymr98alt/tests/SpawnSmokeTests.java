@@ -6,6 +6,13 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.monster.Zombie;
+import net.minecraftforge.event.entity.EntityJoinLevelEvent;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.FakePlayerFactory;
@@ -18,6 +25,24 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder("colony_spawn_guard")
 @PrefixGameTestTemplate(false)
 public class SpawnSmokeTests {
+    private static final DeferredRegister<EntityType<?>> TYPES = DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, "colony_spawn_guard_tests");
+    private static final RegistryObject<EntityType<Zombie>> MODDED_ENEMY = TYPES.register("unlisted_enemy",
+            () -> EntityType.Builder.<Zombie>of(Zombie::new, MobCategory.CREATURE).sized(0.6F, 1.8F).build("unlisted_enemy"));
+    private static final RegistryObject<EntityType<CategoryMonster>> MODDED_MONSTER = TYPES.register("unlisted_monster",
+            () -> EntityType.Builder.<CategoryMonster>of(CategoryMonster::new, MobCategory.MONSTER).sized(0.6F, 1.8F).build("unlisted_monster"));
+
+    public static class CategoryMonster extends PathfinderMob {
+        public CategoryMonster(EntityType<? extends PathfinderMob> type, net.minecraft.world.level.Level level) { super(type, level); }
+    }
+
+    public SpawnSmokeTests() {
+        var bus = net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext.get().getModEventBus();
+        TYPES.register(bus);
+        bus.addListener((net.minecraftforge.event.entity.EntityAttributeCreationEvent event) -> {
+            event.put(MODDED_ENEMY.get(), Zombie.createAttributes().build());
+            event.put(MODDED_MONSTER.get(), Mob.createMobAttributes().build());
+        });
+    }
     @GameTest(template = "empty", timeoutTicks = 400)
     public static void colonySpawnProtection(GameTestHelper helper) {
         var level = helper.getLevel();
@@ -52,6 +77,27 @@ public class SpawnSmokeTests {
             var peaceful = new MobSpawnEvent.PositionCheck(pig, level, MobSpawnType.NATURAL, null);
             MinecraftForge.EVENT_BUS.post(peaceful);
             helper.assertTrue(peaceful.getResult() == Event.Result.DEFAULT, "Unlisted pig must remain allowed inside colony");
+            for (EntityType<? extends Mob> type : java.util.List.of(MODDED_ENEMY.get(), MODDED_MONSTER.get())) {
+                Mob modded = type.create(level);
+                modded.moveTo(pos, 0, 0);
+                var natural = new MobSpawnEvent.PositionCheck(modded, level, MobSpawnType.NATURAL, null);
+                MinecraftForge.EVENT_BUS.post(natural);
+                helper.assertTrue(natural.getResult() == Event.Result.DENY, "Unlisted modded hostile must be blocked: " + EntityType.getKey(type));
+                var customEvent = finalizeEvent(modded, helper, MobSpawnType.EVENT);
+                MinecraftForge.EVENT_BUS.post(customEvent);
+                helper.assertTrue(customEvent.isSpawnCancelled(), "Modded event spawn must be cancelled");
+                Mob direct = type.create(level);
+                direct.moveTo(pos, 0, 0);
+                helper.assertTrue(!level.addFreshEntity(direct), "Direct insertion bypassing spawn checks must be blocked");
+                var saved = new EntityJoinLevelEvent(direct, level, true);
+                MinecraftForge.EVENT_BUS.post(saved);
+                helper.assertTrue(!saved.isCanceled(), "Existing saved mobs must not be blocked on reload");
+                Mob eggMob = type.spawn(level, pos, MobSpawnType.SPAWN_EGG);
+                helper.assertTrue(eggMob != null && level.getEntity(eggMob.getUUID()) != null, "Explicit spawn eggs must remain allowed");
+                eggMob.discard();
+            }
+            helper.assertTrue(level.addFreshEntity(pig), "Peaceful direct insertion must remain allowed");
+            pig.discard();
             manager.deleteColonyByWorld(colony.getID(), false, level);
         });
     }
@@ -61,6 +107,8 @@ public class SpawnSmokeTests {
                 helper.getLevel().getCurrentDifficultyAt(mob.blockPosition()), reason, null, null, null);
     }
 }
+
+
 
 
 

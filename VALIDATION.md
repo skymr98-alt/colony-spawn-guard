@@ -1,4 +1,13 @@
-# Validation — 2026-10-22
+# Validation — 1.0.1 / 2026-10-26
+
+The updated build and required GameTest passed. In addition to the original checks below, the test registers two custom entity types under the separate `colony_spawn_guard_tests` namespace; neither ID appears in any default blacklist:
+
+- A hostile implementing `Enemy` but registered in `CREATURE` category.
+- A mob in `MONSTER` category that does not implement `Enemy`.
+
+For each type it checks natural spawn denial, event-spawn finalization cancellation, rejection of direct `addFreshEntity` insertion, preservation of an entity loaded from disk, and successful real spawning via a spawn egg. It also checks that a pig can still be directly added inside the colony. All these checks passed on a real MineColonies colony; the synthetic entities test the cross-mod classification and event paths, not every third-party mob's AI.
+
+## Original port checks
 
 ## Build
 
@@ -38,3 +47,4 @@ The test module and empty test template are included in the source archive; they
 ## Scope
 
 This checks the mod lifecycle, configuration loading, the exact MineColonies API, territory claims, and Forge event handling on a headless test server. It does not constitute a full playthrough of the user's modpack. Client joining, every mod's custom spawn path, and MineColonies raids have not been tested. See README for limitations.
+

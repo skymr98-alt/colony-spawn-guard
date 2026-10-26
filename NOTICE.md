@@ -22,3 +22,5 @@ MineColonies, Mojang, or Microsoft. No ownership of third-party names is claimed
 Redistributors must preserve applicable notices and comply with GPLv3, including
 making corresponding source available when distributing binaries.
 
+
+Modified on 2026-10-26: added automatic cross-mod hostile protection, direct world insertion checks, configuration exemptions and modded-mob regression tests (version 1.0.1).
